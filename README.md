@@ -7,7 +7,7 @@ Backend тестового задания: TypeScript, Node.js, NestJS, Apollo G
 Нужны Docker Engine и Docker Compose v2. В папке проекта:
 
 ```powershell
-Copy-Item .env.example .env
+if (-not (Test-Path -LiteralPath .env)) { Copy-Item -LiteralPath .env.example -Destination .env }
 docker compose up --build -d --wait
 ```
 
@@ -20,14 +20,16 @@ docker compose logs api
 docker compose down
 ```
 
-`down` сохраняет именованный том БД. Пароль в примере предназначен только для локального демо. Для другого пароля используй URL-безопасные символы либо отдельно закодируй пароль в DATABASE_URL. PostgreSQL не публикует порт на хост; HTTP доступен только с локального компьютера.
+`down` сохраняет именованный том БД. Пароль в примере предназначен только для локального демо. Для другого пароля используй URL-безопасные символы либо отдельно закодируй пароль в DATABASE_URL. PostgreSQL не публикует порт на хост; HTTP доступен только с локального компьютера. Если порт 3000 уже занят, укажи в `.env` свободный порт, например `CARD_HTTP_PORT=33059`, и используй его в адресах `/health` и `/graphql`.
+
+Для проверки запуска с чистой БД используй новое имя Compose-проекта: `docker compose -p itsm-check-01 up --build -d --wait`. Вызови `/health` и запрос BusinessCard ниже, затем выполни `docker compose -p itsm-check-01 restart api` и `docker compose -p itsm-check-01 up -d --wait`. Повтори запрос: карточка и количество связанных записей должны сохраниться. В конце выполни `docker compose -p itsm-check-01 down`.
 
 ## Запуск без Docker
 
 Нужны Node.js 22+ и работающая PostgreSQL 17 с базой в UTF-8.
 
 ```powershell
-Copy-Item .env.example .env
+if (-not (Test-Path -LiteralPath .env)) { Copy-Item -LiteralPath .env.example -Destination .env }
 # Укажи в .env DATABASE_URL своей локальной БД.
 npm ci
 npm run build
