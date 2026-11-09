@@ -1,0 +1,47 @@
+name: Docker Compose
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  compose:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    env:
+      COMPOSE_PROJECT_NAME: itsm-compose-check
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+
+      - name: Check a clean start and API restart
+        shell: bash
+        run: |
+          export POSTGRES_PASSWORD="$(openssl rand -hex 24)"
+          docker compose config --quiet
+          docker compose up --build -d --wait --wait-timeout 120
+          curl --fail --silent --show-error --max-time 15 http://127.0.0.1:3000/health
+
+          request='{"query":"query BusinessCard { profile { name description links { label url } skills { name } experience { company position period achievements } projects { name description link } } }"}'
+          endpoint=http://127.0.0.1:3000/graphql
+          query=(curl --fail-with-body --silent --show-error --max-time 15 --header 'Content-Type: application/json' --data "$request" "$endpoint")
+          "${query[@]}" | jq -S . > first.json
+          jq -e '
+            (.errors | not) and
+            (.data.profile | (.name | length > 0) and (.description | length > 0) and
+              (.links | length >= 2) and (.skills | length > 0) and
+              (.experience | length > 0) and (.projects | length == 3) and
+              all(.projects[]; (.link | startswith("https://"))))
+          ' first.json
+          curl --fail --silent --show-error --max-time 15 --header 'Accept: text/html' "$endpoint" > sandbox.html
+          grep -qi sandbox sandbox.html
+
+          docker compose restart api
+          docker compose up -d --wait --wait-timeout 120 --no-recreate
+          "${query[@]}" | jq -S . > restarted.json
+          diff -u first.json restarted.json
