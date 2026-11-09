@@ -1,0 +1,6 @@
+node_modules/
+dist/
+.env
+.test-runtime/
+*.log
+task-state.md

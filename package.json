@@ -1,0 +1,39 @@
+{
+  "name": "stepan-business-card-api",
+  "version": "1.0.0",
+  "private": true,
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "build": "prisma generate && tsc -p tsconfig.json",
+    "start": "node scripts/start.cjs",
+    "db:migrate": "prisma migrate deploy",
+    "db:seed": "node prisma/seed.cjs",
+    "check": "prisma validate && tsc --noEmit",
+    "test:e2e": "node --test --test-concurrency=1 test/e2e.cjs"
+  },
+  "dependencies": {
+    "@apollo/server": "^5.0.0",
+    "@as-integrations/express5": "^1.1.2",
+    "@nestjs/apollo": "14.2.0",
+    "@nestjs/common": "12.3.3",
+    "@nestjs/core": "12.3.3",
+    "@nestjs/graphql": "14.2.0",
+    "@nestjs/platform-express": "12.3.3",
+    "@prisma/client": "6.19.3",
+    "express": "^5.1.0",
+    "graphql": "^16.11.0",
+    "prisma": "6.19.3",
+    "reflect-metadata": "^0.2.2",
+    "rxjs": "^7.8.2"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.0",
+    "@types/node": "^24.0.0",
+    "typescript": "^5.9.0"
+  },
+  "overrides": {
+    "deepmerge-ts": "8.0.2"
+  }
+}
