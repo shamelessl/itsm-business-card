@@ -65,7 +65,15 @@ test('fresh start, full GraphQL card, safe restart and query cost', { timeout: 9
   assert.equal((await query(getIntrospectionQuery())).body.errors, undefined);
   const landing = await fetch(`${endpoint}/graphql`, { headers: { accept: 'text/html' } });
   assert.equal(landing.status, 200);
-  assert.match(await landing.text(), /apollo|sandbox/i);
+  const landingHtml = await landing.text();
+  assert.match(landingHtml, /apollo|sandbox/i);
+  const document = landingHtml.match(/"document":\s*("(?:[^"\\]|\\.)*")/);
+  assert.ok(document, 'Sandbox should start with a GraphQL operation');
+  const sandbox = await query(JSON.parse(document[1]));
+  assert.equal(sandbox.status, 200);
+  assert.equal(sandbox.body.errors, undefined);
+  const { id, ...expectedSandboxProfile } = profile;
+  assert.deepEqual(sandbox.body.data.profile, expectedSandboxProfile);
   assert.ok((await query('{ profile { unknownField } }')).body.errors);
   assert.ok((await query('mutation { deleteProfile }')).body.errors);
   const oversized = await fetch(`${endpoint}/graphql`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ query: ' '.repeat(70000) }) });

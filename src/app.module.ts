@@ -5,6 +5,17 @@ import { ApolloServerPluginLandingPageLocalDefault } from '@apollo/server/plugin
 import { CardModule } from './card/card.module';
 import { PrismaService } from './database/prisma.service';
 
+const businessCardQuery = `query BusinessCard {
+  profile {
+    name
+    description
+    links { label url }
+    skills { name }
+    experience { company position period achievements }
+    projects { name description link }
+  }
+}`;
+
 @Controller()
 class HealthController {
   constructor(private readonly prisma: PrismaService) {}
@@ -26,7 +37,7 @@ class HealthController {
     allowBatchedHttpRequests: false,
     includeStacktraceInErrorResponses: false,
     maxRecursiveSelections: 1000,
-    plugins: [ApolloServerPluginLandingPageLocalDefault({ embed: true })]
+    plugins: [ApolloServerPluginLandingPageLocalDefault({ embed: true, document: businessCardQuery })]
   })],
   controllers: [HealthController]
 })
